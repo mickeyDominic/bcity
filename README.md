@@ -15,7 +15,7 @@ BCity is a PHP project for to show case my abilities as a PHP programmer as requ
 ## Installation
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/mickeyDominic/bcity.git
 cd bcity
 composer install
 ```
