@@ -29,6 +29,7 @@ composer install
 ## Usage
 
 ```bash
+php artisan key:generate
 php artisan serve
 ```
 
