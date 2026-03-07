@@ -25,11 +25,11 @@ composer install
 1. Copy `.env.example` to `.env`
 2. Update environment variables
 3. Run migrations: `php artisan migrate`
+4. Generate App Key `php artisan key:generate`
 
 ## Usage
 
 ```bash
-php artisan key:generate
 php artisan serve
 ```
 
