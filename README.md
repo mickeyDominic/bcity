@@ -24,9 +24,8 @@ composer install
 
 1. Copy `.env.example` to `.env`
 2. Update environment variables
-3. Get packages: `composer install`
-4. Run migrations: `php artisan migrate`
-5. Generate APP_KEY: `php artisan key:generate`
+3. Run migrations: `php artisan migrate`
+4. Generate APP_KEY: `php artisan key:generate`
 
 ## Usage
 
