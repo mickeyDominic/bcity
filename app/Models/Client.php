@@ -10,7 +10,6 @@ class Client extends Model
 
     protected $fillable = [
         'name',
-        'code',
-        'linked_contacts'
+        'code'
     ];
 }

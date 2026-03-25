@@ -20,19 +20,11 @@ class ClientController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->json()->all(), ['name' => 'required|string|min:3|max:50']);
+        $validator = Validator::make($request->json()->all(), ['name' => 'required|string|min:1|max:50']);
 
         if ($validator->fails()) {
             return response()->json([
@@ -42,18 +34,49 @@ class ClientController extends Controller
             ], 422);
         } else {
             try {
-                $client = new Client();
-                $client->name = $request->post("name");
-                $explodedName = explode(" ", $request->post("name"));
+                $explodedName = explode(' ', $request->post('name'));
                 if (sizeof($explodedName) > 2) {
-                    $code = substr($explodedName[0], 0, 1).substr($explodedName[1], 0, 1).substr($explodedName[2], 0, 1);
+                    $codeName = substr($explodedName[0], 0, 1).substr($explodedName[1], 0, 1).substr($explodedName[2], 0, 1);
                 } else {
-                    $code = substr($request->post("name"), 0, 3);
+                    $codeName = substr($request->post('name'), 0, 3);
                 }
-                $client->code = strtoupper($code);
-                $client->save();
-                Client::where('id', $client->id)
-                    ->update(['code' => $client->code.str_pad($client->id, 3, "0", STR_PAD_LEFT)]);
+                
+                $codeName = strtoupper($codeName);
+
+                $code = Client::where('code', 'like', $codeName.'%');
+                if ($code->count()) {
+                    $codeNum = $code->orderBy('code', 'desc')->first()->code;
+                    $element = substr($codeNum, 0, 3);
+                    $numeric = (int) substr($codeNum, 3);
+                }
+
+                if (strlen($codeName) > 2) {
+                    if (!empty($numeric)) {
+                        $clientCode = $this->concatenateDigits($codeName, $numeric);
+                    } else {
+                        $clientCode = $this->concatenateDigits($codeName);
+                    }
+                } else {
+                    if (!empty($numeric)) {
+                        switch ($numeric) {
+                            case 999:
+                                $codeName = $this->alphaFillName($codeName, $element);
+                                $clientCode = $this->concatenateDigits($codeName);
+                                break;
+                            default:
+                                $codeName = $this->alphaFillName($codeName, $element);
+                                $clientCode = $this->concatenateDigits($element, $numeric);
+                                break;
+                        }
+                    } else {
+                        $clientCode = $this->concatenateDigits($codeName.'A');
+                    }
+                }
+
+                $client = Client::create([
+                    'name' => $request->post("name"),
+                    'code' => $clientCode
+                ]);
 
                 $buttons = '<a data-bs-toggle="modal" data-bs-target="#reusableModalLG"'.
                                 'data-bs-label="View Client"'.
@@ -70,10 +93,10 @@ class ClientController extends Controller
 
                 return response()->json([
                     'status' => 'success', 
-                    'client_code' => $client->code.str_pad($client->id, 3, "0", STR_PAD_LEFT),
+                    'client_code' => $client->code,
                     'rowData' => [
                         'name' => $client->name,
-                        'code' => $client->code.str_pad($client->id, 3, "0", STR_PAD_LEFT),
+                        'code' => $client->code,
                         'count' => 0,
                         'buttons' => $buttons
                     ],
@@ -88,6 +111,27 @@ class ClientController extends Controller
                 ], 500);
             }
         }
+    }
+
+    private function alphaFillName(string $codeName, string $element)
+    {
+        $suffix = substr($element, 2, 1);
+        $count = Client::where('code', 'like', $codeName.$suffix.'%')
+            ->count();
+
+        if($count) {
+            $suffix++;
+            return $this->alphaFillName($codeName, $codeName.strtoupper($suffix));
+        } else {
+            return $codeName.$suffix;
+        }
+    }
+
+    private function concatenateDigits(string $name, int $count = null) : string
+    {
+        $num = !empty($count) ? $count += 1 : 1;
+
+        return $name . str_pad((string) $num, 3, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -171,43 +215,5 @@ class ClientController extends Controller
         }
         
         return response()->json(['status' => $status, 'alert' => $alert, 'message' => $mesage], $httpCode);
-    }
-
-
-
-
-
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Client $client)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Client $client)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Client $client)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Client $client)
-    {
-        //
     }
 }
